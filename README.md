@@ -1,24 +1,44 @@
 # Exploring How Generative MLLMs Perceive More Than CLIP with the Same Vision Encoder (ACL 2025)
 
-Code for "Exploring How Generative MLLMs Perceive More Than CLIP with the Same Vision Encoder". 
+This repo includes the code for "Exploring How Generative MLLMs Perceive More Than CLIP with the Same Vision Encoder" (ACL 2025). 
 
 ## Evaluation on What'sUp and MMVP/MMVP-VLM
 
 For CLIP-ViT-L/14-336px:
 
-For LLaVA-1.5-7B, Phi-3-V-3.8B, LLaMA-3-V-8B:
+For LLaVA-1.5-7B, Phi-3-V-3.8B, LLaMA-3-V-8B: 
+
+For LLM2CLIP: Use `open_clip-main/src/eval_llm2clip.sh`.
 
 ## Evaluation on Other Benchmarks
 
-The code is based on 
+The code is based on [t2v_metrics](https://github.com/linzhiqiu/t2v_metrics). 
 
 ## Ablation on Training Data
 
-We use the [OpenCLIP](https://github.com/mlfoundations/open_clip) to train the CLIP, SigLIP, and EVA-CLIP model on converted LLaVA-1.5's data.
+We use the [OpenCLIP](https://github.com/mlfoundations/open_clip) to finetune the pretrained CLIP model on converted LLaVA-1.5's data. Please download the data following [LLaVA-1.5's instruction](https://github.com/haotian-liu/LLaVA), install the environment required by [OpenCLIP](https://github.com/mlfoundations/open_clip), and then check our open_clip-main folder for (1) dataset setting and (2) NegCLIP-style loss for training with left/right negatives. You can use `train-clip.sh` for finetuning. Remove the `--lock-image ` option if you want to try finetuning with the unfrozen vision encoder.
 
 ## Ablation on Token Usage
 
+For the ablation on LLaVA-1.5, we only added one thing based on the [official code](https://github.com/haotian-liu/LLaVA): the `'cls'` option, in their `llava/model/multimodal_encoder/clip_encoder.py`, corresponding scripts, and parameters:
 
+```
+def feature_select(self, image_forward_outs):
+    image_features = image_forward_outs.hidden_states[self.select_layer]
+    if self.select_feature == 'patch':
+        image_features = image_features[:, 1:]
+    elif self.select_feature == 'cls_patch':
+        image_features = image_features
+    elif self.select_feature == 'cls':     # Here
+        image_features = image_features[:, 0:1]
+    else:
+        raise ValueError(f'Unexpected select feature: {self.select_feature}')
+    return image_features
+```
+
+Then we train the model with the `'cls'` option for both stages (Pre-training for Feature Alignment + Fine-tuning End-to-End).
+
+For PACL (with patch tokens for image) and SPARC (with patch tokens for image and multiple text tokens), our code is based on an implementation of [PACL](https://github.com/NMS05/Patch-Aligned-Contrastive-Learning).
 
 ## Ablation on Language Model
 

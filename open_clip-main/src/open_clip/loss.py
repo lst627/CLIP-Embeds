@@ -64,6 +64,27 @@ def gather_features(
 
     return all_image_features, all_text_features
 
+def gather_features_diffsize(
+        image_features,
+        text_features,
+        local_loss=False,
+        gather_with_grad=False,
+        rank=0,
+        world_size=1,
+        use_horovod=False
+):
+    # Does not support horovod for now
+    assert gather_with_grad == True 
+    all_image_features = torch.cat(torch.distributed.nn.all_gather(image_features), dim=0)
+    text_feature_size = torch.tensor(text_features.shape, device=text_features.device, dtype=torch.int)
+    all_text_feature_sizes = torch.distributed.nn.all_gather(text_feature_size)
+    max_num = max([sizes[0] for sizes in all_text_feature_sizes])
+    padded_text_features = torch.cat([text_features, torch.zeros((max_num - text_features.shape[0], text_features.shape[1])).to(text_features.device)])
+    all_padded_text_features = torch.distributed.nn.all_gather(padded_text_features)
+    all_text_features = []
+    for i in range(len(all_padded_text_features)):
+        all_text_features.append(all_padded_text_features[i][:all_text_feature_sizes[i][0]])
+    return all_image_features, all_text_features
 
 class ClipLoss(nn.Module):
 
@@ -75,6 +96,7 @@ class ClipLoss(nn.Module):
             rank=0,
             world_size=1,
             use_horovod=False,
+            usehardtext=False
     ):
         super().__init__()
         self.local_loss = local_loss
@@ -83,7 +105,7 @@ class ClipLoss(nn.Module):
         self.rank = rank
         self.world_size = world_size
         self.use_horovod = use_horovod
-
+        self.usehardtext = usehardtext
         # cache state
         self.prev_num_logits = 0
         self.labels = {}
@@ -99,26 +121,44 @@ class ClipLoss(nn.Module):
                 self.prev_num_logits = num_logits
         else:
             labels = self.labels[device]
-        return labels
+        
+        return labels, labels
+
+    def get_mixed_ground_truth(self, device, num_images, num_texts) -> torch.Tensor:
+        labels_image = torch.arange(num_images, device=device, dtype=torch.long)
+        if self.world_size > 1 and self.local_loss:
+            labels_image = labels_image + num_images * self.rank
+        labels_text = torch.cat([
+            labels_image,
+            -100 * torch.ones(num_texts - num_images, device=device, dtype=torch.long)
+        ], dim=-1)
+        return labels_image, labels_text
 
     def get_logits(self, image_features, text_features, logit_scale, logit_bias=None):
         if self.world_size > 1:
-            all_image_features, all_text_features = gather_features(
-                image_features,
-                text_features,
-                local_loss=self.local_loss,
-                gather_with_grad=self.gather_with_grad,
-                rank=self.rank,
-                world_size=self.world_size,
-                use_horovod=self.use_horovod,
-            )
-
+            if not self.usehardtext:
+                all_image_features, all_text_features = gather_features(
+                    image_features, text_features,
+                    self.local_loss, self.gather_with_grad, self.rank, self.world_size, self.use_horovod)
+            else:
+                all_image_features, text_features_list = gather_features_diffsize(
+                    image_features, text_features,
+                    self.local_loss, self.gather_with_grad, self.rank, self.world_size, self.use_horovod)
+                per_gpu_size = image_features.shape[0]
+                original_text_features_list, hard_negatives = [], []
+                for mixed_text_feature in text_features_list:
+                    original_text_features_list.append(mixed_text_feature[:per_gpu_size])
+                    hard_negatives.append(mixed_text_feature[per_gpu_size:])
+                original_text_features_list.extend(hard_negatives)
+                all_text_features = torch.cat(original_text_features_list, dim=0)
+                
             if self.local_loss:
                 logits_per_image = logit_scale * image_features @ all_text_features.T
                 logits_per_text = logit_scale * text_features @ all_image_features.T
             else:
                 logits_per_image = logit_scale * all_image_features @ all_text_features.T
                 logits_per_text = logits_per_image.T
+           
         else:
             logits_per_image = logit_scale * image_features @ text_features.T
             logits_per_text = logit_scale * text_features @ image_features.T
@@ -138,18 +178,16 @@ class ClipLoss(nn.Module):
             output_dict=False,
     ):
         device = image_features.device
-        logits_per_image, logits_per_text = self.get_logits(
-            image_features,
-            text_features,
-            logit_scale,
-            logit_bias=logit_bias,
-        )
+        logits_per_image, logits_per_text = self.get_logits(image_features, text_features, logit_scale, logit_bias)
 
-        labels = self.get_ground_truth(device, logits_per_image.shape[0])
+        if self.usehardtext:
+            labels_image, labels_text = self.get_mixed_ground_truth(device, logits_per_image.shape[0], logits_per_text.shape[0])
+        else:
+            labels_image, labels_text = self.get_ground_truth(device, logits_per_image.shape[0])
 
         total_loss = (
-            F.cross_entropy(logits_per_image, labels) +
-            F.cross_entropy(logits_per_text, labels)
+            F.cross_entropy(logits_per_image, labels_image) +
+            F.cross_entropy(logits_per_text, labels_text)
         ) / 2
 
         return {"contrastive_loss": total_loss} if output_dict else total_loss
@@ -239,8 +277,8 @@ class DistillClipLoss(ClipLoss):
         return contrastive_loss, distill_loss
 
 
-def neighbour_exchange(from_rank, to_rank, tensor, group=None):
-    tensor_recv = torch.zeros_like(tensor)
+def neighbour_exchange(from_rank, to_rank, tensor, group=None, size = None):
+    tensor_recv = torch.zeros_like(tensor) if size is None else torch.zeros(tuple(size)).to(tensor.device)
     send_op = torch.distributed.P2POp(
         torch.distributed.isend,
         tensor,
@@ -259,9 +297,9 @@ def neighbour_exchange(from_rank, to_rank, tensor, group=None):
     return tensor_recv
 
 
-def neighbour_exchange_bidir(left_rank, right_rank, tensor_to_left, tensor_to_right, group=None):
-    tensor_from_left = torch.zeros_like(tensor_to_right)
-    tensor_from_right = torch.zeros_like(tensor_to_left)
+def neighbour_exchange_bidir(left_rank, right_rank, tensor_to_left, tensor_to_right, group=None, size_from_left=None, size_from_right=None): 
+    tensor_from_left = torch.zeros_like(tensor_to_right) if size_from_left is None else torch.zeros(tuple(size_from_left)).to(tensor_to_right.device)
+    tensor_from_right = torch.zeros_like(tensor_to_left) if size_from_right is None else torch.zeros(tuple(size_from_right)).to(tensor_to_left.device)
     send_op_left = torch.distributed.P2POp(
         torch.distributed.isend,
         tensor_to_left,
@@ -294,37 +332,46 @@ def neighbour_exchange_bidir(left_rank, right_rank, tensor_to_left, tensor_to_ri
 
 class NeighbourExchange(torch.autograd.Function):
     @staticmethod
-    def forward(ctx, from_rank, to_rank, group, tensor):
+    def forward(ctx, from_rank, to_rank, group, tensor, size):
         ctx.group = group
         ctx.from_rank = from_rank
         ctx.to_rank = to_rank
-        return neighbour_exchange(from_rank, to_rank, tensor, group=group)
+        ctx.size = tensor.shape
+        return neighbour_exchange(from_rank, to_rank, tensor, group=group, size=size)
 
     @staticmethod
     def backward(ctx, grad_output):
-        return (None, None, None) + (NeighbourExchange.apply(ctx.to_rank, ctx.from_rank, ctx.group, grad_output),)
+        return (None, None, None) + (NeighbourExchange.apply(ctx.to_rank, ctx.from_rank, ctx.group, grad_output, ctx.size), None)
 
 
 def neighbour_exchange_with_grad(from_rank, to_rank, tensor, group=None):
-    return NeighbourExchange.apply(from_rank, to_rank, group, tensor)
+    size_self = torch.tensor(tensor.shape, device=tensor.device, dtype=torch.int)
+    size = neighbour_exchange(from_rank, to_rank, size_self, group=group)
+    return NeighbourExchange.apply(from_rank, to_rank, group, tensor, size)
 
 
 class NeighbourExchangeBidir(torch.autograd.Function):
     @staticmethod
-    def forward(ctx, left_rank, right_rank, group, tensor_to_left, tensor_to_right):
+    def forward(ctx, left_rank, right_rank, group, tensor_to_left, tensor_to_right, size_from_left, size_from_right):
         ctx.group = group
         ctx.left_rank = left_rank
         ctx.right_rank = right_rank
-        return neighbour_exchange_bidir(left_rank, right_rank, tensor_to_left, tensor_to_right, group=group)
+        ctx.size_to_left = tensor_to_left.shape
+        ctx.size_to_right = tensor_to_right.shape
+        return neighbour_exchange_bidir(left_rank, right_rank, tensor_to_left, tensor_to_right, group=group, size_from_left=size_from_left, size_from_right=size_from_right)
 
     @staticmethod
     def backward(ctx, *grad_outputs):
         return (None, None, None) + \
-            NeighbourExchangeBidir.apply(ctx.right_rank, ctx.left_rank, ctx.group, *grad_outputs)
+            NeighbourExchangeBidir.apply(ctx.right_rank, ctx.left_rank, ctx.group, *grad_outputs, ctx.size_to_right, ctx.size_to_left) + \
+            (None, None)
 
 
 def neighbour_exchange_bidir_with_grad(left_rank, right_rank, tensor_to_left, tensor_to_right, group=None):
-    return NeighbourExchangeBidir.apply(left_rank, right_rank, group, tensor_to_left, tensor_to_right)
+    size_to_left = torch.tensor(tensor_to_left.shape, device=tensor_to_left.device, dtype=torch.int)
+    size_to_right = torch.tensor(tensor_to_right.shape, device=tensor_to_right.device, dtype=torch.int)
+    size_from_left, size_from_right = neighbour_exchange_bidir(left_rank, right_rank, size_to_left, size_to_right, group=group)
+    return NeighbourExchangeBidir.apply(left_rank, right_rank, group, tensor_to_left, tensor_to_right, size_from_left, size_from_right)
 
 
 class SigLipLoss(nn.Module):
@@ -343,6 +390,7 @@ class SigLipLoss(nn.Module):
             rank: int = 0,
             world_size: int = 1,
             dist_impl: Optional[str] = None,
+            usehardtext: bool = False,
     ):
         super().__init__()
         self.cache_labels = cache_labels
@@ -353,12 +401,19 @@ class SigLipLoss(nn.Module):
 
         # cache state FIXME cache not currently used, worthwhile?
         self.prev_num_logits = 0
+        self.usehardtext = usehardtext
         self.labels = {}
 
     def get_ground_truth(self, device, dtype, num_logits, negative_only=False) -> torch.Tensor:
         labels = -torch.ones((num_logits, num_logits), device=device, dtype=dtype)
         if not negative_only:
             labels = 2 * torch.eye(num_logits, device=device, dtype=dtype) + labels
+        return labels
+    
+    def get_mixed_ground_truth(self, device, dtype, num_logits, num_texts, negative_only=False) -> torch.Tensor:
+        labels = -torch.ones((num_logits, num_texts), device=device, dtype=dtype)
+        if not negative_only:
+            labels = 2 * torch.eye(num_logits, num_texts, device=device, dtype=dtype) + labels
         return labels
 
     def get_logits(self, image_features, text_features, logit_scale, logit_bias=None):
@@ -369,13 +424,24 @@ class SigLipLoss(nn.Module):
 
     def _loss(self, image_features, text_features, logit_scale, logit_bias=None, negative_only=False):
         logits = self.get_logits(image_features, text_features, logit_scale, logit_bias)
-        labels = self.get_ground_truth(
-            image_features.device,
-            image_features.dtype,
-            image_features.shape[0],
-            negative_only=negative_only,
-        )
-        loss = -F.logsigmoid(labels * logits).sum() / image_features.shape[0]
+        if self.usehardtext:
+            labels = self.get_mixed_ground_truth(
+                image_features.device,
+                image_features.dtype,
+                image_features.shape[0],
+                text_features.shape[0],
+                negative_only=negative_only,
+            )
+        else:
+            labels = self.get_ground_truth(
+                image_features.device,
+                image_features.dtype,
+                image_features.shape[0],
+                text_features.shape[0],
+                negative_only=negative_only,
+            )
+        mat = -F.logsigmoid(labels * logits)
+        loss = mat.sum() / image_features.shape[0]
         return loss
 
     def forward(self, image_features, text_features, logit_scale, logit_bias, output_dict=False):

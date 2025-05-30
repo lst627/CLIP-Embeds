@@ -805,6 +805,7 @@ def create_loss(args):
             rank=args.rank,
             world_size=args.world_size,
             dist_impl=args.loss_dist_impl,  # siglip has multiple distributed implementations to choose from
+            usehardtext=args.usehardtext
         )
 
     return ClipLoss(
@@ -814,6 +815,7 @@ def create_loss(args):
         rank=args.rank,
         world_size=args.world_size,
         use_horovod=args.horovod,
+        usehardtext=args.usehardtext
     )
 
 

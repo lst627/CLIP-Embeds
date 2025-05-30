@@ -61,9 +61,15 @@ def parse_args(args):
     )
     parser.add_argument(
         "--dataset-type",
-        choices=["webdataset", "csv", "synthetic", "auto"],
+        choices=["webdataset", "csv", "synthetic", "auto", "datamix"],
         default="auto",
         help="Which type of dataset to process."
+    )
+    parser.add_argument(
+        "--augfiles",
+        nargs='+',
+        default=None,
+        help='Files for text augmentation.'
     )
     parser.add_argument(
         "--dataset-resampled",
@@ -478,6 +484,12 @@ def parse_args(args):
         default=None,
         type=str,
         help='A string to specify a specific distributed loss implementation.'
+    )
+    parser.add_argument(
+        "--usehardtext",
+        default=False,
+        action="store_true",
+        help='Use Hard Text.'
     )
 
     args = parser.parse_args(args)

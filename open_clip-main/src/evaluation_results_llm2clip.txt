@@ -1,0 +1,62 @@
+Model path: microsoft/LLM2CLIP-Openai-L-14-336 Dataset: a
+Individual accuracy: 54.12621359223301
+Left Right Individual accuracy: 49.51456310679612
+On Under Individual accuracy: 58.737864077669904
+Front Back Individual accuracy: 0.0
+Left Right Pair accuracy: 0.970873786407767
+On Under Pair accuracy: 17.475728155339805
+Front Back Pair accuracy: 0.0
+Pair accuracy: 9.223300970873787
+Set accuracy: 0.970873786407767
+
+Model path: microsoft/LLM2CLIP-Openai-L-14-336 Dataset: b
+Individual accuracy: 52.205882352941174
+Left Right Individual accuracy: 49.01960784313726
+On Under Individual accuracy: 0.0
+Front Back Individual accuracy: 55.3921568627451
+Left Right Pair accuracy: 0.9803921568627451
+On Under Pair accuracy: 0.0
+Front Back Pair accuracy: 14.705882352941176
+Pair accuracy: 7.8431372549019605
+Set accuracy: 0.0
+Model path: microsoft/LLM2CLIP-Openai-L-14-336 Dataset: cocoone
+Individual accuracy: 50.02225189141077
+Left Right Individual accuracy: 48.68421052631579
+Top Bottom Individual accuracy: 51.400180668473354
+Model path: microsoft/LLM2CLIP-Openai-L-14-336 Dataset: cocotwo
+Individual accuracy: 52.95454545454545
+Left Right Individual accuracy: 52.68817204301075
+Above Below Individual accuracy: 53.41614906832298
+Model path: microsoft/LLM2CLIP-Openai-L-14-336 Dataset: vgone
+Individual accuracy: 46.293103448275865
+Left Right Individual accuracy: 48.828125
+Top Bottom Individual accuracy: 41.53846153846154
+Front Behind Individual accuracy: 0.0
+Model path: microsoft/LLM2CLIP-Openai-L-14-336 Dataset: vgtwo
+Individual accuracy: 56.013745704467354
+Left Right Individual accuracy: 58.333333333333336
+Top Bottom Individual accuracy: 66.66666666666667
+Front Behind Individual accuracy: 29.166666666666668
+
+Model path: microsoft/LLM2CLIP-Openai-L-14-336 Dataset: a4
+Individual accuracy: 30.58252427184466
+Left Right Individual accuracy: 47.0873786407767
+On Under Individual accuracy: 14.077669902912621
+Front Back Individual accuracy: 0.0
+Left Right Pair accuracy: 0.970873786407767
+On Under Pair accuracy: 0.0
+Front Back Pair accuracy: 0.0
+Pair accuracy: 0.4854368932038835
+Set accuracy: 0.0
+Model path: microsoft/LLM2CLIP-Openai-L-14-336 Dataset: b4
+Individual accuracy: 32.1078431372549
+Left Right Individual accuracy: 32.35294117647059
+On Under Individual accuracy: 0.0
+Front Back Individual accuracy: 31.862745098039216
+Left Right Pair accuracy: 0.9803921568627451
+On Under Pair accuracy: 0.0
+Front Back Pair accuracy: 4.901960784313726
+Pair accuracy: 2.9411764705882355
+Set accuracy: 0.0
+
+

@@ -842,17 +842,17 @@ def text_global_pool(
         pool_type: str = 'argmax',
 ) -> torch.Tensor:
     if pool_type == 'first':
-        pooled = x[:, 0]
+        pooled, tokens = x[:, 0], x[:, 1:]
     elif pool_type == 'last':
-        pooled = x[:, -1]
+        pooled, tokens = x[:, -1], x[:, :-1]
     elif pool_type == 'argmax':
         # take features from the eot embedding (eot_token is the highest number in each sequence)
         assert text is not None
-        pooled = x[torch.arange(x.shape[0]), text.argmax(dim=-1)]
+        pooled, tokens = x[torch.arange(x.shape[0]), text.argmax(dim=-1)], x
     else:
-        pooled = x
+        pooled = tokens = x
 
-    return pooled
+    return pooled, tokens
 
 
 class TextTransformer(nn.Module):

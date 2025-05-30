@@ -248,6 +248,7 @@ class CLIP(nn.Module):
         self.ln_final = text.ln_final
         self.text_projection = text.text_projection
         self.text_pool_type = text.pool_type
+        self.output_text_tokens = False
         self.register_buffer('attn_mask', text.attn_mask, persistent=False)
 
         lshape = [1] if nonscalar_logit_scale else []
@@ -287,14 +288,17 @@ class CLIP(nn.Module):
         x = x + self.positional_embedding.to(cast_dtype)
         x = self.transformer(x, attn_mask=self.attn_mask)
         x = self.ln_final(x)  # [batch_size, n_ctx, transformer.width]
-        x = text_global_pool(x, text, self.text_pool_type)
+        x, tokens = text_global_pool(x, text, self.text_pool_type)
         if self.text_projection is not None:
             if isinstance(self.text_projection, nn.Linear):
                 x = self.text_projection(x)
             else:
                 x = x @ self.text_projection
 
-        return F.normalize(x, dim=-1) if normalize else x
+        x = F.normalize(x, dim=-1) if normalize else x
+        if self.output_text_tokens:
+            return x, tokens 
+        return x
 
     def get_logits(self, image, text):
         image_features = self.encode_image(image, normalize=True)

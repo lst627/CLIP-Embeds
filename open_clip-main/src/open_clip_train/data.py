@@ -26,6 +26,113 @@ except ImportError:
     hvd = None
 
 
+class DataMixDataset(Dataset):
+    def __init__(self, annotations, transforms, tokenizer, hard_text=False, augfiles=None):
+        logging.debug(f'Loading HF data.')
+        # Filter out the sample without images
+        self.sample_list = []
+        for sample in annotations:
+            if 'image' in sample:
+                self.sample_list.append(sample)
+        self.transforms = transforms
+        logging.debug('Done loading data.')
+        self.tokenize = tokenizer
+        self.hard_text = hard_text
+        
+        # position, read from json
+        self.keywords = {}
+        self.phrases = False
+        if augfiles is not None:
+            for f in augfiles:
+                with open(f, 'r') as file:
+                    new_keywords = json.load(file)
+                    self.keywords.update(new_keywords)
+        for k in self.keywords.keys():
+            if ' ' in k:
+                self.phrases = True
+                break
+
+    def __len__(self):
+        return len(self.sample_list)
+    
+    def _tokenize(self, text, hard_text=False):
+        if not isinstance(text, list):
+            text = [text]
+
+        return self.tokenize(text)
+
+    def _modify(self, text):
+        exist_hn = False
+        if self.phrases:
+            modified_text = text
+            for phrase in self.keywords.keys():
+                i = text.find(phrase)
+                if i != -1: 
+                    exist_hn = True
+                    opposite = random.choice(self.keywords[phrase])
+                    modified_text = text.replace(phrase, opposite)
+                    break
+
+        else:
+            modified_text = []
+            for word in text.split():
+                if word.lower() in self.keywords:
+                    exist_hn = True
+                    altered_words = self.keywords[word.lower()]
+                    modified_text.append(random.choice(altered_words))
+                else:
+                    modified_text.append(word)
+            modified_text = " ".join(modified_text)
+
+        return modified_text if exist_hn else None
+    
+    def __getitem__(self, idx):
+        # {'id': '000000033471', 
+        # 'image': 'coco/train2017/000000033471.jpg', 
+        # 'conversations': [{'from': 'human', 'value': '<image>\nWhat are the colors of the bus in the image?'}, 
+        # {'from': 'gpt', 'value': 'The bus in the image is white and red.'}, 
+        # {'from': 'human', 'value': 'What feature can be seen on the back of the bus?'}, 
+        # {'from': 'gpt', 'value': 'The back of the bus features an advertisement.'}, 
+        # {'from': 'human', 'value': 'Is the bus driving down the street or pulled off to the side?'}, 
+        # {'from': 'gpt', 'value': 'The bus is driving down the street, which is crowded with people and other vehicles.'}]}
+
+        sample = self.sample_list[idx]
+        if sample["image"][0] == '0': # from the LCS-558K
+            images = self.transforms(Image.open("/your-path/LLaVA-Pretrain/images/"+sample["image"]).convert("RGB"))
+        else: # from DataMix-665K
+            images = self.transforms(Image.open("/your-path/datamix665k/"+sample["image"]).convert("RGB"))
+        
+        # Each time randomly choose an answer as the caption
+        i = random.randint(0, len(sample["conversations"]) // 2 - 1)
+        text = self._tokenize([sample["conversations"][i*2+1]['value']])
+        text = text.squeeze()
+
+        if self.hard_text:
+            hard_text = self._modify(sample["conversations"][i*2+1]['value'])
+            if hard_text is not None: 
+                hard_text = self._tokenize([hard_text], hard_text=True)
+                hard_text = hard_text.squeeze()
+            
+            return images, text, hard_text 
+        return images, text
+
+    def __iter__(self):
+        return iter(self.sample_list)
+
+    @staticmethod
+    def collate_fn(batched_samples) -> dict:
+        batched_image = torch.cat([example[0].unsqueeze(0) for example in batched_samples])
+        batched_caption = [example[1].unsqueeze(0) for example in batched_samples]
+        if len(batched_samples[0]) > 2: # use hard_texts
+            batched_hard_texts = []
+            for i, example in enumerate(batched_samples):
+                if example[2] is not None: 
+                    batched_hard_texts.append(example[2].unsqueeze(0)) 
+
+            batched_caption.extend(batched_hard_texts)
+        batched_caption = torch.cat(batched_caption)
+        return batched_image, batched_caption
+
 class CsvDataset(Dataset):
     def __init__(self, input_filename, transforms, img_key, caption_key, sep="\t", tokenizer=None):
         logging.debug(f'Loading csv data from {input_filename}.')
@@ -472,6 +579,39 @@ def get_csv_dataset(args, preprocess_fn, is_train, epoch=0, tokenizer=None):
 
     return DataInfo(dataloader, sampler)
 
+def get_datamix_dataset(args, preprocess_fn, is_train, epoch=0, tokenizer=None):
+    f1 = open("/your-path/LLaVA-Instruct-150K/llava_v1_5_mix665k.json", "r")
+    annotations = json.load(f1)
+    f1.close()
+    f2 = open("/your-path/LLaVA-Pretrain/blip_laion_cc_sbu_558k.json", "r")
+    annotations_2 = json.load(f2)
+    f2.close()
+    annotations.extend(annotations_2)
+
+    dataset = DataMixDataset(annotations,
+        transforms=preprocess_fn, 
+        tokenizer=tokenizer,
+        hard_text=(args.usehardtext),
+        augfiles=args.augfiles,)
+        
+    num_samples = len(dataset)
+    sampler = DistributedSampler(dataset) if args.distributed and is_train else None
+    shuffle = is_train and sampler is None
+    
+    dataloader = DataLoader(
+        dataset,
+        batch_size=args.batch_size,
+        shuffle=shuffle,
+        num_workers=args.workers,
+        pin_memory=True,
+        sampler=sampler,
+        drop_last=is_train,
+        collate_fn=DataMixDataset.collate_fn
+    )
+    dataloader.num_samples = num_samples
+    dataloader.num_batches = len(dataloader)
+
+    return DataInfo(dataloader, sampler)
 
 class SyntheticDataset(Dataset):
 
@@ -530,6 +670,8 @@ def get_dataset_fn(data_path, dataset_type):
         return get_csv_dataset
     elif dataset_type == "synthetic":
         return get_synthetic_dataset
+    elif dataset_type == "datamix":
+        return get_datamix_dataset
     elif dataset_type == "auto":
         ext = data_path.split('.')[-1]
         if ext in ['csv', 'tsv']:

@@ -1,0 +1,8 @@
+{
+    "on the left": ["on the right"], 
+    "on the right": ["on the left"],
+    "to the left": ["to the right"],
+    "to the right": ["to the left"],
+    "at the left": ["at the right"],
+    "at the right": ["at the left"]
+}

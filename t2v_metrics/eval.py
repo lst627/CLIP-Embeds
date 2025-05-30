@@ -3,7 +3,7 @@
 import argparse
 import os
 import t2v_metrics
-from dataset import Winoground, NaturalBench_Retrieval, EqBen_Mini, StanfordT23D, TIFA160_DSG, Flickr8K_CF, SeeTrue, Pickapic_v1, T2VScore
+from dataset import Winoground, NaturalBench_Retrieval, EqBen_Mini, StanfordT23D, TIFA160_DSG, Flickr8K_CF, SeeTrue, Pickapic_v1, T2VScore, SugarCREPE, COCOCounterfactuals, Flickr30K_P
 
 
 def config():
@@ -12,7 +12,7 @@ def config():
                         help='Root directory for saving datasets.')
     parser.add_argument("--cache_dir", default=t2v_metrics.constants.HF_CACHE_DIR, type=str) 
     parser.add_argument("--device", default="cuda", type=str)
-    parser.add_argument("--batch_size", default=16, type=int)
+    parser.add_argument("--batch_size", default=32, type=int)
     parser.add_argument("--model", default="clip-flant5-xxl", type=str)
     parser.add_argument("--question", default=None, type=str)
     parser.add_argument("--answer", default=None, type=str)
@@ -38,12 +38,9 @@ def main():
         Winoground,
         NaturalBench_Retrieval,
         EqBen_Mini,
-        TIFA160_DSG,
-        Pickapic_v1,
         SeeTrue,
-        StanfordT23D,
-        T2VScore,
-        Flickr8K_CF
+        SugarCREPE,
+        COCOCounterfactuals,
     ]:
         
         dataset = dataset_cls(root_dir=args.root_dir)

@@ -1,1 +1,3 @@
 from .language_model.llava_llama import LlavaLlamaForCausalLM, LlavaConfig, ModelArguments
+from .language_model.llava_phi3 import LlavaPhiForCausalLM, LlavaPhiConfig, PhiModelArguments
+from .language_model.llava_llama3 import LlavaLlama3ForCausalLM, LlavaLlama3Config, Llama3ModelArguments

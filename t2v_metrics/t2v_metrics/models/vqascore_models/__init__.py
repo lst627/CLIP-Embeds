@@ -1,5 +1,5 @@
 from .clip_t5_model import CLIP_T5_MODELS, CLIPT5Model
-from .llava_model import LLAVA_MODELS, LLaVAModel
+from .llava_model import LLAVA_MODELS, LLaVAModel, LLAVA_LLAMA_MODELS, LLaVALLaMAModel
 from .llava16_model import LLAVA16_MODELS, LLaVA16Model
 from .instructblip_model import InstructBLIP_MODELS, InstructBLIPModel
 from .gpt4v_model import GPT4V_MODELS, GPT4VModel
@@ -8,6 +8,7 @@ from ...constants import HF_CACHE_DIR
 ALL_VQA_MODELS = [
     CLIP_T5_MODELS,
     LLAVA_MODELS,
+    LLAVA_LLAMA_MODELS,
     LLAVA16_MODELS,
     InstructBLIP_MODELS,
     GPT4V_MODELS,
@@ -22,6 +23,8 @@ def get_vqascore_model(model_name, device='cuda', cache_dir=HF_CACHE_DIR, **kwar
         return CLIPT5Model(model_name, device=device, cache_dir=cache_dir, **kwargs)
     elif model_name in LLAVA_MODELS:
         return LLaVAModel(model_name, device=device, cache_dir=cache_dir, **kwargs)
+    elif model_name in LLAVA_LLAMA_MODELS:
+        return LLaVALLaMAModel(model_name, device=device, cache_dir=cache_dir, **kwargs)
     elif model_name in LLAVA16_MODELS:
         return LLaVA16Model(model_name, device=device, cache_dir=cache_dir, **kwargs)
     elif model_name in InstructBLIP_MODELS:

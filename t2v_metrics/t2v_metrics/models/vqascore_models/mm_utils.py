@@ -83,6 +83,7 @@ def load_pretrained_model(model_cls,
     model = model_cls.from_pretrained(model_path, cache_dir=cache_dir)
     
     if mmprojector_repo:
+        # Currently not support Phi-3-V and LLaMA-3-V models
         from huggingface_hub import hf_hub_download
         model_base_name = mmprojector_repo.split('/')[-1]
         

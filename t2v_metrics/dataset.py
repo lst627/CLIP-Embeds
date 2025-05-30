@@ -11,6 +11,7 @@ import scipy
 from scipy.stats import kendalltau
 from sklearn.metrics import roc_auc_score
 import cv2
+import pandas as pd
 
 def calc_pearson(metric1_scores, metric2_scores):
     pearson = 100*np.corrcoef(metric1_scores, metric2_scores)[0, 1]
@@ -227,6 +228,51 @@ def get_winoground_acc(scores):
     }
     return result
 
+def get_sugarcrepe_scores(scores_i2t):
+    ids = list(range(scores_i2t.shape[0]))
+    sugarcrepe_scores = []
+    for id, score_i2t in zip(ids, scores_i2t):
+        sugarcrepe_scores.append({
+            "id" : id,
+            "c0_i0": score_i2t[0][0],
+            "c1_i0": score_i2t[0][1]}
+        )
+    return sugarcrepe_scores
+
+def get_sugarcrepe_acc(scores):
+    text_correct_count = 0
+    def text_correct(result):
+        return result["c0_i0"] > result["c1_i0"]
+    for result in scores:
+        text_correct_count += 1 if text_correct(result) else 0
+    
+    denominator = len(scores)
+    result = {
+        'text': text_correct_count/denominator
+    }
+    return result
+
+def get_flickr30kp_acc(scores):
+    text_correct_count = 0
+    indiv_correct_count = 0
+    def text_correct(result):
+        return result["c0_i0"] > result["c1_i0"] and result["c1_i1"] > result["c0_i1"]
+    def indiv_correct(result):
+        res = 0
+        if result["c0_i0"] > result["c1_i0"]: res += 0.5 
+        if result["c1_i1"] > result["c0_i1"]: res += 0.5 
+        return res 
+
+    for result in scores:
+        text_correct_count += 1 if text_correct(result) else 0
+        indiv_correct_count += indiv_correct(result) 
+    
+    denominator = len(scores)
+    result = {
+        'text': text_correct_count/denominator,
+        'individual': indiv_correct_count/denominator,
+    }
+    return result
 
 class Winoground(Dataset):
     def __init__(self,
@@ -1797,6 +1843,208 @@ class NaturalBench_Retrieval(Dataset):
         print("NaturalBench-Retrieval performance (overall)")
         print(f"{'Dataset': <70} {'Text': <10} {'Image': <10} {'Group': <10}")
         print(f"{'NaturalBench-Retrieval': <70} {acc['text']: <10.2%} {acc['image']: <10.2%} {acc['group']: <10.2%}")
+        results = {}
+        results['all'] = acc
+        return results
+
+class COCOCounterfactuals(Dataset):
+    def __init__(self,
+                 root_dir='./datasets',
+                 download=True,
+                 image_preprocess=None,
+                 return_image_paths=True):
+        self.root_dir = root_dir
+        self.dataset_dir = os.path.join(root_dir, "COCOCounterfactuals")
+        self.image_dir = os.path.join(self.dataset_dir, "images")
+        self.metadata_path = os.path.join('./datasets/cococounterfactuals.jsonl')
+
+        self.download_links =  "https://huggingface.co/datasets/Intel/COCO-Counterfactuals/resolve/main/data/images.zip"
+
+        if not os.path.exists(self.dataset_dir):
+            if download:
+                import subprocess
+                model_file_name = "images.zip"
+                image_zip_file = os.path.join(self.root_dir, model_file_name)
+                if not os.path.exists(image_zip_file):
+                    subprocess.call(
+                        ["wget", self.download_links, "-O", model_file_name], cwd=self.root_dir
+                    )
+                subprocess.call(["unzip", "-q", model_file_name], cwd=self.root_dir)
+
+        with open(self.metadata_path, 'r', encoding='utf-8') as file:
+            self.metadata = [json.loads(line) for line in file]
+
+        self.return_image_paths = return_image_paths
+        
+        if return_image_paths:
+            assert image_preprocess is None
+            self.preprocess = None
+        self.preprocess = image_preprocess
+    
+    def __len__(self):
+        return len(self.metadata)
+
+    def __getitem__(self, idx):
+        # assert self.metadata[idx]['index'] == idx
+        image_0_path = os.path.join(self.image_dir, self.metadata[idx]['image_0']+".jpg")
+        image_1_path = os.path.join(self.image_dir, self.metadata[idx]['image_1']+".jpg")
+        if self.return_image_paths:
+            image_0 = image_0_path
+            image_1 = image_1_path
+        else:
+            image_0 = self.preprocess(self.image_loader(image_0_path))
+            image_1 = self.preprocess(self.image_loader(image_1_path))
+        
+        caption_0 = self.metadata[idx]['caption_0']
+        caption_1 = self.metadata[idx]['caption_1']
+        item = {
+            "images": [image_0, image_1],
+            "texts": [caption_0, caption_1]
+        }
+        return item
+    
+    def evaluate_scores(self, scores):
+        winoground_scores = get_winoground_scores(scores)
+        acc = get_winoground_acc(winoground_scores)
+        print("COCOCounterfactuals performance (overall)")
+        print(f"{'Dataset': <70} {'Text': <10} {'Image': <10} {'Group': <10}")
+        print(f"{'COCOCounterfactuals': <70} {acc['text']: <10.2%} {acc['image']: <10.2%} {acc['group']: <10.2%}")
+        results = {}
+        results['all'] = acc
+        return results
+
+class SugarCREPE(Dataset):
+    def __init__(self,
+                 root_dir='./datasets',
+                 download=True,
+                 image_preprocess=None,
+                 return_image_paths=True):
+        self.image_dir = "/your-path/val2017"
+        data_dict = {
+            'add_obj'    : f'datasets/sugar_crepe/add_obj.json',
+            'add_att'    : f'datasets/sugar_crepe/add_att.json',
+            'replace_obj': f'datasets/sugar_crepe/replace_obj.json',
+            'replace_att': f'datasets/sugar_crepe/replace_att.json',
+            'replace_rel': f'datasets/sugar_crepe/replace_rel.json',
+            'swap_obj'   : f'datasets/sugar_crepe/swap_obj.json',
+            'swap_att'   : f'datasets/sugar_crepe/swap_att.json',
+        }
+        dataset = {}
+        self.subset_types = []
+        self.metadata = []
+        self.subset_indices = {subset_type: [] for subset_type in data_dict.keys()}
+        
+        i = 0
+        for c, data_path in data_dict.items():
+            self.subset_types.append(c)
+            dataset[c] = json.load(open(data_path, 'r', encoding='utf-8'))
+            for idx, value in dataset[c].items():
+                self.subset_indices[c].append(i)
+                self.metadata.append(value)
+                i += 1
+        
+        self.return_image_paths = return_image_paths
+        
+        # If we are only returning image paths, ensure no preprocessing is applied.
+        if return_image_paths:
+            assert image_preprocess is None
+            self.preprocess = None
+        else:
+            self.preprocess = image_preprocess
+    
+    def __len__(self):
+        return len(self.metadata)
+    
+    def __getitem__(self, idx):
+        # Verify that the stored index matches the requested index
+        # assert self.metadata[idx]['index'] == idx
+        
+        # Load image using the filename stored in metadata
+        image_path = os.path.join(self.image_dir, self.metadata[idx]['filename'])
+        if self.return_image_paths:
+            image = image_path
+        else:
+            # Assumes self.image_loader is defined elsewhere in your code
+            image = self.preprocess(self.image_loader(image_path))
+        
+        # For SugarCREPE, we assume each example has a positive caption and a hard negative caption
+        positive_caption = self.metadata[idx]['caption']
+        negative_caption = self.metadata[idx]['negative_caption']
+        
+        item = {
+            "images": [image],
+            "texts": [positive_caption, negative_caption]
+        }
+        return item
+    
+    def evaluate_scores(self, scores):
+        # These functions should process raw scores into evaluation metrics.
+        sugarcrepe_scores = get_sugarcrepe_scores(scores)
+        acc = get_sugarcrepe_acc(sugarcrepe_scores)
+        print("SugarCREPE performance (overall)")
+        print(f"{'Dataset': <70} {'Text': <10}")
+        print(f"{'SugarCREPE': <70} {acc['text']: <10.2%}")
+        results = {}
+        results['all'] = acc
+        for subset_type in self.subset_types:
+            subset_indices = self.subset_indices[subset_type]
+            subset_scores = [sugarcrepe_scores[idx] for idx in subset_indices]
+            subset_acc = get_sugarcrepe_acc(subset_scores)
+            print(f"{'SugarCREPE ' + subset_type: <70} {subset_acc['text']: <10.2%}")
+            results[subset_type] = subset_acc
+        return results
+
+class Flickr30K_P(Dataset):
+    def __init__(self,
+                 root_dir='./datasets',
+                 download=True,
+                 image_preprocess=None,
+                 return_image_paths=True):
+        self.root_dir = root_dir
+        self.image_dir = root_dir
+        self.return_image_paths = return_image_paths
+        # list of dicts
+        self.metadata = pd.read_csv('./datasets/flickr30k_left_right_up_down_.csv', delimiter='\t').to_dict(orient='records')
+        # If we are only returning image paths, ensure no preprocessing is applied.
+        if return_image_paths:
+            assert image_preprocess is None
+            self.preprocess = None
+        else:
+            self.preprocess = image_preprocess
+    
+    def __len__(self):
+        return len(self.metadata)
+    
+    def __getitem__(self, idx):
+        # Verify that the stored index matches the requested index
+        # assert self.metadata[idx]['index'] == idx
+        
+        # Load image using the filename stored in metadata
+        image_path = [os.path.join(self.image_dir, self.metadata[idx]['images']),
+                       os.path.join(self.image_dir, self.metadata[idx]['neg_images'])]
+        if self.return_image_paths:
+            image = image_path
+        else:
+            # Assumes self.image_loader is defined elsewhere in your code
+            image = self.preprocess(self.image_loader(image_path))
+        
+        # For SugarCREPE, we assume each example has a positive caption and a hard negative caption
+        positive_caption = self.metadata[idx]['captions']
+        negative_caption = self.metadata[idx]['neg_captions']
+        
+        item = {
+            "images": image,
+            "texts": [positive_caption, negative_caption]
+        }
+        return item
+    
+    def evaluate_scores(self, scores):
+        # These functions should process raw scores into evaluation metrics.
+        flickr30kp_scores = get_winoground_scores(scores)
+        acc = get_flickr30kp_acc(flickr30kp_scores)
+        print("Flickr30K-P performance (overall)")
+        print(f"{'Dataset': <70} {'Individual': <10} {'Text': <10}")
+        print(f"{'Flickr30K-P': <70} {acc['individual']: <10.2%} {acc['text']: <10.2%}")
         results = {}
         results['all'] = acc
         return results

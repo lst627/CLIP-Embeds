@@ -32,6 +32,8 @@ class CLIPVisionTower(nn.Module):
             image_features = image_features[:, 1:]
         elif self.select_feature == 'cls_patch':
             image_features = image_features
+        elif self.select_feature == 'cls':
+            image_features = image_features[:, 0:1]
         else:
             raise ValueError(f'Unexpected select feature: {self.select_feature}')
         return image_features

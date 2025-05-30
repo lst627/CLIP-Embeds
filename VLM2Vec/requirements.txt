@@ -1,0 +1,16 @@
+torch==2.4.1
+torchvision
+flash-attn
+transformers
+huggingface-hub
+peft
+accelerate
+datasets
+numpy==1.26.4
+scipy
+tqdm
+wandb
+pillow
+wrapt
+py-cpuinfo
+hjson

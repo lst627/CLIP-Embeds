@@ -12,7 +12,7 @@ For LLM2CLIP: Use `open_clip/src/eval_llm2clip.sh`.
 
 ## Evaluation on Other Benchmarks
 
-The code is based on [t2v_metrics](https://github.com/linzhiqiu/t2v_metrics). 
+The code is based on [t2v_metrics](https://github.com/linzhiqiu/t2v_metrics). We add new datasets and new models for our experiments. Please follow their instruction on environment installation, and then use `t2v_metrics/eval.sh`.
 
 ## Ablation on Training Data
 

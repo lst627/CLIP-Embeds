@@ -8,7 +8,7 @@ For CLIP-ViT-L/14-336px:
 
 For LLaVA-1.5-7B, Phi-3-V-3.8B, LLaMA-3-V-8B: 
 
-For LLM2CLIP: Use `open_clip-main/src/eval_llm2clip.sh`.
+For LLM2CLIP: Use `open_clip/src/eval_llm2clip.sh`.
 
 ## Evaluation on Other Benchmarks
 
@@ -16,7 +16,7 @@ The code is based on [t2v_metrics](https://github.com/linzhiqiu/t2v_metrics).
 
 ## Ablation on Training Data
 
-We use the [OpenCLIP](https://github.com/mlfoundations/open_clip) to finetune the pretrained CLIP model on converted LLaVA-1.5's data. Please download the data following [LLaVA-1.5's instruction](https://github.com/haotian-liu/LLaVA), install the environment required by [OpenCLIP](https://github.com/mlfoundations/open_clip), and then check our open_clip-main folder for (1) dataset setting and (2) NegCLIP-style loss for training with left/right negatives. You can use `train-clip.sh` for finetuning. Remove the `--lock-image ` option if you want to try finetuning with the unfrozen vision encoder.
+We use the [OpenCLIP](https://github.com/mlfoundations/open_clip) to finetune the pretrained CLIP, SigLIP, and EVA-CLIP model on converted LLaVA-1.5's data. Please download the data following [LLaVA-1.5's instruction](https://github.com/haotian-liu/LLaVA), install the environment required by [OpenCLIP](https://github.com/mlfoundations/open_clip), and then check our `open_clip` folder for (1) dataset setting and (2) NegCLIP-style loss for training with left/right negatives. You can use `train-clip.sh` for finetuning CLIP as an example. Remove the `--lock-image ` option if you want to try finetuning with the unfrozen vision encoder.
 
 ## Ablation on Token Usage
 

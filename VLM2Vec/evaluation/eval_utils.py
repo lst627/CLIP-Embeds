@@ -17,7 +17,7 @@ def get_pred(qry_t, tgt_t, normalization=False):
     return scores, pred
 
 def save_results(results, model_args, data_args, train_args):
-    save_file = model_args.model_name + "_" + (model_args.model_type if  model_args.model_type is not None else "") + "_" + data_args.embedding_type + "_results.json"
+    save_file = model_args.model_name.replace("/","_") + "_" + (model_args.model_type if  model_args.model_type is not None else "") + "_" + data_args.embedding_type + "_results.json"
     with open(os.path.join(data_args.encode_output_path, save_file), "w") as json_file:
         json.dump(results, json_file, indent=4)
 

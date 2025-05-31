@@ -1,4 +1,4 @@
-# VLM2Vec
+# VLM2Vec: Training Vision-Language Models for Massive Multimodal Embedding Tasks (ICLR 2025)
 
 This repo contains the code and data for [VLM2Vec: Training Vision-Language Models for Massive Multimodal Embedding Tasks](https://arxiv.org/abs/2410.05160). In this paper, we aimed at building a unified multimodal embedding model for any tasks.  
 
@@ -13,6 +13,8 @@ This repo contains the code and data for [VLM2Vec: Training Vision-Language Mode
 <img style="height:22pt" src="https://img.shields.io/badge/-🤗%20Dataset-red?style=flat"></a>
 <a target="_blank" href="https://huggingface.co/collections/TIGER-Lab/vlm2vec-6705f418271d085836e0cdd5">
 <img style="height:22pt" src="https://img.shields.io/badge/-🤗%20Models-red?style=flat"></a>
+<a target="_blank" href="https://huggingface.co/spaces/TIGER-Lab/MMEB">
+<img style="height:22pt" src="https://img.shields.io/badge/-🤗%20Leaderboard-red?style=flat"></a>
 <a target="_blank" href="https://x.com/WenhuChen/status/1844577017930694984">
 <img style="height:22pt" src="https://img.shields.io/badge/-Tweet-blue?style=flat&logo=twitter"></a>
 <br>
@@ -20,6 +22,9 @@ This repo contains the code and data for [VLM2Vec: Training Vision-Language Mode
 ---
 
 ## 🔥News
+- [2025-01] 🎉 **VLM2Vec is accepted to ICLR 2025.**
+- [2025-01] We have updated our [training data](https://huggingface.co/datasets/TIGER-Lab/MMEB-train). Each subset now contains two splits: ```original``` and ```diverse_instruction```. The ```original``` split is provided to support the reproduction of our paper results. The ```diverse_instruction``` split includes paraphrased instructions for each task, designed to enhance instruction diversity and improve the model's robustness to unseen instructions and tasks. Moving forward, our future releases will primarily use the ```diverse_instruction``` split.
+- [2024-12] We have released the [MMEB leaderboard](https://huggingface.co/spaces/TIGER-Lab/MMEB). Feel free to contact us if you want to include your model.
 - [2024-12] Our team is actively working on VLM2Vec v1.1, which will introduce new features, including hard negatives, additional VLM backbones, multiple-images input and more. Stay tuned!
 - [2024-12] We have released a new variant of VLM2Vec built on the LLaVa-Next backbone, which is currently our best-performing version: https://huggingface.co/TIGER-Lab/VLM2Vec-LLaVa-Next.
 - [2024-10] VLM2Vec has been integrated into [vLLM](https://github.com/vllm-project/vllm/blob/main/examples/offline_inference_vision_language_embedding.py).
@@ -67,6 +72,7 @@ Use `--lora --lora_r 16` to enable LoRA tuning.
 ```bash
 torchrun --nproc_per_node=2 --master_port=22447 --max_restarts=0 train.py \
  --model_name microsoft/Phi-3.5-vision-instruct --bf16 --pooling last \
+ --model_backbone phi3_v \
  --dataset_name TIGER-Lab/MMEB-train \
  --subset_name ImageNet_1K N24News HatefulMemes InfographicsVQA ChartQA Visual7W VisDial CIRR NIGHTS WebQA MSCOCO \
  --num_sample_per_subset 50000 \
@@ -89,6 +95,7 @@ unzip images.zip -d eval_images/
 1. For full-finetuned models, we use
 ```bash
 python eval.py --model_name TIGER-Lab/VLM2Vec-Full \
+  --model_backbone phi3_v \
   --encode_output_path outputs/ \
   --num_crops 4 --max_len 256 \
   --pooling last --normalize True \
@@ -101,6 +108,7 @@ python eval.py --model_name TIGER-Lab/VLM2Vec-Full \
 2. For LoRA-based models, we use
 ```bash
 python eval.py --lora --model_name microsoft/Phi-3.5-vision-instruct --checkpoint_path TIGER-Lab/VLM2Vec-LoRA \
+  --model_backbone phi3_v \
   --encode_output_path outputs/ \
   --num_crops 4 --max_len 256 \
   --pooling last --normalize True \

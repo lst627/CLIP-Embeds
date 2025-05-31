@@ -1,43 +1,27 @@
+import random
 from typing import List, Tuple
+from itertools import islice
 import datasets
 from datasets import load_dataset, concatenate_datasets
+from torch.utils.data import Dataset
 from PIL import Image
 import os
-
-from torch.jit import isinstance
-
-from src.model_utils import PHI3V, vlm_image_tokens
-from src.utils import print_master, print_rank
-
-# from datasets import Dataset  # @ruimeng, still buggy
-from torch.utils.data import Dataset
+import json
 
 
-def process_image(image, resolution, max_dim=1344):
-    if image is None:
-        return None
-    if resolution == "high":
-        image = image.resize((1344, 1344))
-    elif resolution == "mid":
-        image = image.resize((672, 672))
-    elif resolution == "low":
-        image = image.resize((128, 128))
-    else:
-        cur_max_dim = max(image.size)
-        if cur_max_dim > max_dim:
-            image = image.resize((max_dim, max_dim))
-    return image
-
-
-class TrainTextImageDataset(Dataset):
+Phi_Image_token = "<|image_1|>"
+Llava_Image_token = "<image>"
+Qwen_Image_token = "<|image_pad|>"
+class TrainDataset(Dataset):
     def __init__(self, data_args, model_args):
         self.data_args = data_args
         self.model_args = model_args
         train_data = []
-        print_rank(f"Loading {len(data_args.subset_name)} datasets: {data_args.subset_name}")
+        print(f"Loading {len(data_args.subset_name)} datasets: {data_args.subset_name}")
         for subset in data_args.subset_name:
             subset_data = load_dataset(
-                self.data_args.dataset_name, subset,
+                self.data_args.dataset_name,
+                subset,
                 split=f"{self.data_args.dataset_split}[:{data_args.num_sample_per_subset}]",
             )
             train_data.append(subset_data)
@@ -46,60 +30,120 @@ class TrainTextImageDataset(Dataset):
     def __len__(self):
         return len(self.train_data)
 
+    def _process_image(self, image, resolution):
+        if image is None:
+            return None
+        if resolution == "high":
+            image = image.resize((1344, 1344))
+        elif resolution == "low":
+            image = image.resize((336, 336))
+
+        return image
+
     def _get_image(self, img_path):
-        if not img_path:
+        if img_path == "":
             return None
         full_img_path = os.path.join(self.data_args.image_dir, img_path)
         image = Image.open(full_img_path)
-        backbone = self.model_args.model_backbone
-        if backbone != PHI3V and self.data_args.image_resolution:
-            return process_image(image, self.data_args.image_resolution)
+        if self.model_args.model_backbone == "llava_next":
+            # TODO: make it configurable
+            return self._process_image(image, "high")
+        elif self.model_args.model_backbone == "qwen":
+            return self._process_image(image, "low")
+        elif self.model_args.model_backbone == "llava_1.5":
+            # TODO: make it configurable
+            return self._process_image(image, "low")
         else:
             return image
 
-    def __getitem__(self, data_idx) -> Tuple[str, List[str]]:
-        qry_texts, qry_image_paths, pos_texts, pos_image_paths = (
-            self.train_data[data_idx]["qry"], self.train_data[data_idx]["qry_image_path"],
-            self.train_data[data_idx]["pos_text"], self.train_data[data_idx]["pos_image_path"]
+    def __getitem__(self, item) -> Tuple[str, List[str]]:
+        qry_text, qry_image_path, pos_text, pos_image_path = (
+            self.train_data[item]["qry"], self.train_data[item]["qry_image_path"],
+            self.train_data[item]["pos_text"], self.train_data[item]["pos_image_path"],
         )
-        if 'neg_text' in self.train_data.column_names:
-            neg_texts, neg_image_paths = self.train_data[data_idx]["neg_text"], self.train_data[data_idx]["neg_image_path"]
+        if self.model_args.model_backbone in ["llava_next", "llava-hf/llava-1.5-7b-hf", "llava-1.5"]:
+            # Update image token
+            qry_text = qry_text.replace(Phi_Image_token, Llava_Image_token)
+            pos_text = pos_text.replace(Phi_Image_token, Llava_Image_token)
+        elif self.model_args.model_backbone == "qwen":
+            qry_text = qry_text.replace(Phi_Image_token, Qwen_Image_token)
+            pos_text = pos_text.replace(Phi_Image_token, Qwen_Image_token)
+
+        return (qry_text, self._get_image(qry_image_path),
+                pos_text, self._get_image(pos_image_path))
+
+class CombinedDataset(Dataset):
+    def __init__(self, data_args, model_args):
+        self.data_args = data_args
+        self.model_args = model_args
+        f2 = open("/local1/siting/LLaVA-Pretrain/blip_laion_cc_sbu_558k.json", "r")
+        annotations = json.load(f2)
+        f2.close()
+        self.train_data = annotations
+        self.num_of_pretraining_data = len(self.train_data)
+
+        f1 = open("/local1/siting/LLaVA-Instruct-150K/llava_v1_5_mix665k.json", "r")
+        annotations_2 = json.load(f1)
+        f1.close()
+        self.train_data.extend(annotations_2)
+
+        self.template = "<|image_1|> Represent the given image with the following question: {}"
+        self.template_text = "Find the text that can answer the given query: {}"
+    def __len__(self):
+        return len(self.train_data)
+
+    def _process_image(self, image, resolution):
+        if image is None:
+            return None
+        if resolution == "high":
+            image = image.resize((1344, 1344))
+        elif resolution == "low":
+            image = image.resize((336, 336))
+
+        return image
+
+    def _get_image(self, img_path):
+        if img_path == "":
+            return None
+        full_img_path = img_path
+        image = Image.open(full_img_path)
+        if self.model_args.model_backbone == "llava_next":
+            # TODO: make it configurable
+            return self._process_image(image, "high")
+        elif self.model_args.model_backbone == "qwen":
+            return self._process_image(image, "low")
+        elif self.model_args.model_backbone == "llava_1.5":
+            return self._process_image(image, "low")
         else:
-            neg_texts, neg_image_paths = [''] * len(data_idx), [] * len(data_idx)
-        if isinstance(data_idx, int):
-            qry_texts = [qry_texts]
-            qry_image_paths = [qry_image_paths]
-            pos_texts = [pos_texts]
-            pos_image_paths = [pos_image_paths]
-            neg_texts = [neg_texts]
-            neg_image_paths = [neg_image_paths]
-        _qry_texts, _qry_images, _pos_texts, _pos_images, _neg_texts, _neg_images = [], [], [], [], [], []
-        backbone = self.model_args.model_backbone
-        for qry_text, qry_image_path, pos_text, pos_image_path, neg_text, neg_image_path \
-            in zip(qry_texts, qry_image_paths, pos_texts, pos_image_paths, neg_texts, neg_image_paths):
-            # instructions were hardcoded with Phi3 image special tokens
-            # Update image token for llava and colqwen2
-            if backbone != PHI3V:
-                qry_text = qry_text.replace(vlm_image_tokens[PHI3V], vlm_image_tokens[backbone])
-                pos_text = pos_text.replace(vlm_image_tokens[PHI3V], vlm_image_tokens[backbone])
-                neg_text = neg_text.replace(vlm_image_tokens[PHI3V], vlm_image_tokens[backbone]) if neg_text else None
-            qry_image = self._get_image(qry_image_path)
-            pos_image = self._get_image(pos_image_path)
-            neg_image = self._get_image(neg_image_path) if neg_image_path else None
-            if (not qry_text and not qry_image) or (not pos_text and not pos_image):
-                print("empty inputs")
-                continue
-            _qry_texts.append(qry_text)
-            _qry_images.append(qry_image)
-            _pos_texts.append(pos_text)
-            _pos_images.append(pos_image)
-            _neg_texts.append(neg_text)
-            _neg_images.append(neg_image)
+            return image
 
-        return {"query_text": _qry_texts, "query_image": _qry_images,
-                "pos_text": _pos_texts, "pos_image": _pos_images,
-                "neg_text": _neg_texts, "neg_image": _neg_images}
+    def __getitem__(self, item) -> Tuple[str, List[str]]:
+        sample = self.train_data[item]
+        if item < self.num_of_pretraining_data: # from pretraining stage
+            qry_image_path = os.path.join("/local1/siting/LLaVA-Pretrain", "images", sample["image"]) if "image" in sample else ""
+            qry_text = sample["conversations"][0]['value'] 
+            pos_text = sample["conversations"][1]['value'] # a python string
+        else:
+            qry_image_path = os.path.join("/local1/siting/datamix665k/", sample["image"]) if "image" in sample else ""
+            i = random.randint(0, len(sample["conversations"]) // 2 - 1)
+            qry_text = sample["conversations"][i*2]['value']
+            pos_text = sample["conversations"][i*2+1]['value'] # a python string
+        
+        # The original text could be 'Summarize the visual content of the image.\n<image>'
+        if Llava_Image_token not in qry_text:
+            qry_text = self.template.format(qry_text) if "image" in sample else self.template_text.format(qry_text)
+        pos_image_path = ""
 
+        if self.model_args.model_backbone in ["llava_next", "llava-hf/llava-1.5-7b-hf", "llava-1.5"]:
+            # Update image token
+            qry_text = qry_text.replace(Phi_Image_token, Llava_Image_token)
+            # pos_text = pos_text.replace(Phi_Image_token, Llava_Image_token)
+        elif self.model_args.model_backbone == "qwen":
+            qry_text = qry_text.replace(Phi_Image_token, Qwen_Image_token)
+            # pos_text = pos_text.replace(Phi_Image_token, Qwen_Image_token)
+
+        return (qry_text, self._get_image(qry_image_path),
+                pos_text, self._get_image(pos_image_path))
 
 class EvalDataset(Dataset):
     def __init__(self, data_args, model_args, subset, text_field, img_path_field):
@@ -108,7 +152,6 @@ class EvalDataset(Dataset):
         """
         self.data_args = data_args
         self.model_args = model_args
-        self.backbone = self.model_args.model_backbone
 
         self.eval_data = load_dataset(
             self.data_args.dataset_name,
@@ -126,9 +169,9 @@ class EvalDataset(Dataset):
 
     def __getitem__(self, item):
         text, img_path = self.paired_dataset[item]["text"], self.paired_dataset[item]["img_path"]
-        if self.backbone != PHI3V:
-            text = text.replace(vlm_image_tokens[PHI3V], vlm_image_tokens[self.backbone])
-
+        if self.model_args.model_backbone in ["llava_next", "llava-hf/llava-1.5-7b-hf", "llava-1.5"]:
+            # Update llava image token
+            text = text.replace(Phi_Image_token, Llava_Image_token)
         return text, self._get_image(img_path),
 
     def _process_image(self, image, resolution):
@@ -145,8 +188,8 @@ class EvalDataset(Dataset):
             return None
         full_img_path = os.path.join(self.data_args.image_dir, img_path)
         image = Image.open(full_img_path)
-        if self.model_args.model_backbone != PHI3V and self.data_args.image_resolution:
-            return process_image(image, self.data_args.image_resolution)
+        if self.model_args.model_backbone == "llava_next":
+            return self._process_image(image, "high")
         else:
             return image
         return image
@@ -158,22 +201,65 @@ class EvalDataset(Dataset):
         unique_pair = set()
         for row in self.eval_data:
             if isinstance(row[text_field], str):
-                if row[text_field]:
-                    unique_pair.add((row[text_field], row[img_path_field]))
+                if isinstance(row[img_path_field], List):
+                    for img_path in row[img_path_field]:
+                        unique_pair.add((row[text_field], img_path))
                 else:
-                    if isinstance(row[img_path_field], List):
-                        for img_path in row[img_path_field]:
-                            unique_pair.add((row[text_field], img_path))
-                    else:
-                        unique_pair.add((row[text_field], row[img_path_field]))
-            elif type(row[text_field]) == list:
-                assert type(row[img_path_field]) == list and len(row[img_path_field]) == len(row[text_field])
+                    unique_pair.add((row[text_field], row[img_path_field]))
+            elif isinstance(row[text_field], List):
+                assert isinstance(row[img_path_field], List) and len(row[img_path_field]) == len(row[text_field])
                 for text, img_path in zip(row[text_field], row[img_path_field]):
                     unique_pair.add((text, img_path))
 
         paired_data = [{"text": text, "img_path": img_path} for text, img_path in unique_pair]
         return paired_data
 
+class JsonDataset(EvalDataset):
+    def __init__(self, data_args, model_args, path, text_field, img_path_field, prompt=None):
+        """
+        (text_field, image_field) -> ("qry_text", "qry_img_path") or ("tgt_text", "tgt_img_path")
+        """
+        self.data_args = data_args
+        self.model_args = model_args
+
+        self.eval_data = load_dataset(
+            'json',
+            data_files=path,
+            split="train",
+        )
+        self.paired_data = self.get_paired_data(text_field, img_path_field, prompt)
+        self.paired_dataset = datasets.Dataset.from_dict({
+            "text": [pair["text"] for pair in self.paired_data],
+            "img_path": [pair["img_path"] for pair in self.paired_data]
+        })
+
+    def get_paired_data(self, text_field, img_path_field, prompt=None):
+        """
+        (text_field, image_field) -> ("qry_text", "qry_img_path") or ("tgt_text", "tgt_img_path")
+        """
+        unique_pair = set()
+        if prompt != None:
+            for row in self.eval_data:
+                if isinstance(row[img_path_field], List):
+                    for img_path in row[img_path_field]:
+                        unique_pair.add((prompt, img_path))
+                else:
+                    unique_pair.add((prompt, row[img_path_field]))
+        else:
+            for row in self.eval_data:
+                if isinstance(row[text_field], str):
+                    if isinstance(row[img_path_field], List):
+                        for img_path in row[img_path_field]:
+                            unique_pair.add((row[text_field], img_path))
+                    else:
+                        unique_pair.add((row[text_field], row[img_path_field]))
+                elif isinstance(row[text_field], List):
+                    assert isinstance(row[img_path_field], List) and len(row[img_path_field]) == len(row[text_field])
+                    for text, img_path in zip(row[text_field], row[img_path_field]):
+                        unique_pair.add((text, img_path))
+
+        paired_data = [{"text": text, "img_path": img_path} for text, img_path in unique_pair]
+        return paired_data
 
 class FlickrDataset(Dataset):
     def __init__(self, modality, model_backbone):
@@ -193,10 +279,10 @@ class FlickrDataset(Dataset):
 
     def __getitem__(self, idx):
         text, image = self.eval_data[idx]
-        if self.backbone != PHI3V:
-            text = text.replace(vlm_image_tokens[PHI3V], vlm_image_tokens[self.backbone])
-            if self.data_args.image_resolution:
-                image = process_image(image, self.data_args.image_resolution)
+        if self.model_backbone in ["llava_next", "llava-hf/llava-1.5-7b-hf", "llava-1.5"]:
+            # Update llava image token
+            text = text.replace(Phi_Image_token, Llava_Image_token)
+            image = self._process_image(image, "high")
         return text, image
 
     def _process_image(self, image, resolution):
@@ -213,8 +299,8 @@ class FlickrDataset(Dataset):
             return None
         full_img_path = os.path.join(self.data_args.image_dir, img_path)
         image = Image.open(full_img_path)
-        if self.model_backbone != PHI3V:
-            return process_image(image, self.data_args.image_resolution)
+        if self.model_backbone == "llava_next":
+            return self._process_image(image, "high")
         else:
             return image
         return image

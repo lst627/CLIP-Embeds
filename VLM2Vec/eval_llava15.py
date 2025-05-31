@@ -1,6 +1,6 @@
 
 import os
-os.environ['HF_HOME'] = '/local1/siting/hf_cache/'
+os.environ['HF_HOME'] = '/your-path/hf_cache/'
 from src.model import MMEBModel
 from src.arguments import ModelArguments
 from src.utils import load_processor

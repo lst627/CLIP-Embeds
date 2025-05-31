@@ -3,9 +3,9 @@ import logging
 import sys
 
 import os
-os.environ['HF_HOME'] = '/local1/siting/hf_cache/'
+os.environ['HF_HOME'] = '/your-path/hf_cache/'
 from transformers import AutoTokenizer, AutoProcessor
-from transformers import LlavaNextProcessor   # ?????
+from transformers import LlavaNextProcessor   
 from transformers import (
     HfArgumentParser,
 )

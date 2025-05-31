@@ -76,13 +76,13 @@ class CombinedDataset(Dataset):
     def __init__(self, data_args, model_args):
         self.data_args = data_args
         self.model_args = model_args
-        f2 = open("/local1/siting/LLaVA-Pretrain/blip_laion_cc_sbu_558k.json", "r")
+        f2 = open("/your-path/LLaVA-Pretrain/blip_laion_cc_sbu_558k.json", "r")
         annotations = json.load(f2)
         f2.close()
         self.train_data = annotations
         self.num_of_pretraining_data = len(self.train_data)
 
-        f1 = open("/local1/siting/LLaVA-Instruct-150K/llava_v1_5_mix665k.json", "r")
+        f1 = open("/your-path/LLaVA-Instruct-150K/llava_v1_5_mix665k.json", "r")
         annotations_2 = json.load(f1)
         f1.close()
         self.train_data.extend(annotations_2)
@@ -120,11 +120,11 @@ class CombinedDataset(Dataset):
     def __getitem__(self, item) -> Tuple[str, List[str]]:
         sample = self.train_data[item]
         if item < self.num_of_pretraining_data: # from pretraining stage
-            qry_image_path = os.path.join("/local1/siting/LLaVA-Pretrain", "images", sample["image"]) if "image" in sample else ""
+            qry_image_path = os.path.join("/your-path/LLaVA-Pretrain", "images", sample["image"]) if "image" in sample else ""
             qry_text = sample["conversations"][0]['value'] 
             pos_text = sample["conversations"][1]['value'] # a python string
         else:
-            qry_image_path = os.path.join("/local1/siting/datamix665k/", sample["image"]) if "image" in sample else ""
+            qry_image_path = os.path.join("/your-path/datamix665k/", sample["image"]) if "image" in sample else ""
             i = random.randint(0, len(sample["conversations"]) // 2 - 1)
             qry_text = sample["conversations"][i*2]['value']
             pos_text = sample["conversations"][i*2+1]['value'] # a python string

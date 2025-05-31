@@ -3,7 +3,7 @@ export PYTHONPATH=./:$PYTHONPATH  # Change to your own path
 CUDA_VISIBLE_DEVICES=0,1,2,3 torchrun --nproc_per_node=4 --max_restarts=0 train.py \
   --model_name llava-hf/llava-1.5-7b-hf \
   --model_backbone llava_1.5 \
-  --output_dir /gscratch/simondu/siting/vlm2vec_llava_1.5 \
+  --output_dir /your-path/vlm2vec_llava_1.5 \
   --bf16 --pooling last \
   --lora --lora_r 8 \
   --dataset_name CombinedDataset \

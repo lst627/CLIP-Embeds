@@ -48,4 +48,6 @@ For PACL (with patch tokens for image) and SPARC (with patch tokens for image an
 
 ## Ablation on Alignment Architecture and Prompt
 
-Our LLaVA-1.5-7B-VLM2Vec-LoRA checkpoint can be downloaded [here](https://huggingface.co/lst627/LLaVA-1.5-7B-VLM2Vec-LoRA). 
+Our code is based on a previous commit of [VLM2Vec] (https://github.com/TIGER-AI-Lab/VLM2Vec). Please refer to their repository for setting up the environment.
+
+Our LLaVA-1.5-7B-VLM2Vec-LoRA checkpoint can be downloaded [here](https://huggingface.co/lst627/LLaVA-1.5-7B-VLM2Vec-LoRA) and can be evaluated using `VLM2Vec/eval.sh`. If you would like to reproduce the training process, please refer to `VLM2Vec/scripts/llava_1.5/run_train.sh`. 

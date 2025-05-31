@@ -8,6 +8,9 @@ class ModelArguments:
     model_name: str = field(
         metadata={"help": "huggingface model name or path"}
     )
+    model_backbone: str = field(
+        metadata={"help": "vlm backbone"}
+    )
     processor_name: str = field(
         default=None, metadata={"help": "processor_name, huggingface model name or path"}
     )

@@ -10,6 +10,8 @@ For LLaVA-1.5-7B, Phi-3-V-3.8B, LLaMA-3-V-8B:
 
 For LLM2CLIP: Use `open_clip/src/eval_llm2clip.sh`.
 
+The additional questions for converted MMVP/MMVP-VLM are attached in `additional_questions`. Please place them in your folder containing MMVP and MMVP-VLM data, respectively.
+
 ## Evaluation on Other Benchmarks
 
 The code is based on [t2v_metrics](https://github.com/linzhiqiu/t2v_metrics). We add new datasets and new models for our experiments. Please follow their instruction on environment installation, and then use `t2v_metrics/eval.sh`.
@@ -36,7 +38,7 @@ def feature_select(self, image_forward_outs):
     return image_features
 ```
 
-Then we train the model with the `'cls'` option for both stages (Pre-training for Feature Alignment + Fine-tuning End-to-End).
+Then we train the model with the `'cls'` option for both stages (Pre-training for Feature Alignment + Fine-tuning End-to-End). The checkpoints can be downloaded at https://huggingface.co/lst627/llava-v1.5-7b-lora-merged and https://huggingface.co/lst627/llava-v1.5-7b-lora-cls-merged.
 
 For PACL (with patch tokens for image) and SPARC (with patch tokens for image and multiple text tokens), our code is based on an implementation of [PACL](https://github.com/NMS05/Patch-Aligned-Contrastive-Learning).
 
@@ -46,4 +48,4 @@ For PACL (with patch tokens for image) and SPARC (with patch tokens for image an
 
 ## Ablation on Alignment Architecture and Prompt
 
-
+Our LLaVA-1.5-7B-VLM2Vec-LoRA checkpoint can be downloaded [here](https://huggingface.co/lst627/LLaVA-1.5-7B-VLM2Vec-LoRA). 

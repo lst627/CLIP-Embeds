@@ -1,0 +1,301 @@
+Question ID,Type,Statement
+1,Unknown,a butterfly with wings open
+2,Unknown,a butterfly with wings closed
+3,Unknown,round flame
+4,Unknown,thin flame
+5,Unknown,a dog facing left
+6,Unknown,a dog facing right
+7,Unknown,a bus driving towards the camera
+8,Unknown,a bus driving away from the camera
+9,Unknown,"key ""Z"" on the keyboard"
+10,Unknown,"no key ""Z"" on the keyboard"
+11,Unknown,a peacock opening its tail
+12,Unknown,a peacock folding its tail
+13,Unknown,a single ear of corn
+14,Unknown,multiple ears of corn
+15,Unknown,a shadow on the flower
+16,Unknown,no shadow on the flower
+17,Unknown,protruding front of the school bus
+18,Unknown,flat front of the school bus
+19,Unknown,animal with visible dorsal fin
+20,Unknown,animal without visible dorsal fin
+21,Unknown,duck with entire beak visible
+22,Unknown,duck with partial beak visible
+23,Unknown,snake from front view
+24,Unknown,snake from side view
+25,Unknown,chicken with black body
+26,Unknown,chicken with red body
+27,Unknown,a peacock's head
+28,Unknown,no peacock's head
+29,Unknown,no visible window on the school bus
+30,Unknown,visible window on the school bus
+31,Unknown,wind blowing the flag
+32,Unknown,no wind blowing the flag
+33,Unknown,butterfly with visible abdomen
+34,Unknown,butterfly without visible abdomen
+35,Unknown,vegetables with spikes
+36,Unknown,vegetables without spikes
+37,Unknown,pink flowers in the background
+38,Unknown,violet flowers in the background
+39,Unknown,duck floating
+40,Unknown,duck standing
+41,Unknown,spider with 8 legs
+42,Unknown,spider with 6 legs
+43,Unknown,wheels of the school bus
+44,Unknown,no wheels of the school bus
+45,Unknown,shark's belly
+46,Unknown,no shark's belly
+47,Unknown,animal with 5 spots
+48,Unknown,animal with 6 spots
+49,Unknown,arrow keys
+50,Unknown,no arrow keys
+51,Unknown,elephant with curved trunk
+52,Unknown,elephant with straight trunk
+53,Unknown,countable number of pills
+54,Unknown,uncountable number of pills
+55,Unknown,stems of bananas
+56,Unknown,no stems of bananas
+57,Unknown,crocodile submerged in the water
+58,Unknown,crocodile beside the water
+59,Unknown,lock locked to the chain-linked fence
+60,Unknown,lock not locked to the chain-linked fence
+61,Unknown,"letter ""J"""
+62,Unknown,"no letter ""J"""
+63,Unknown,one daisy that is under the shadow of a taller daisy
+64,Unknown,no daisy that is under the shadow of a taller daisy
+65,Unknown,"no letter ""D"""
+66,Unknown,"letter ""D"""
+67,Unknown,many clouds
+68,Unknown,no clouds
+69,Unknown,snake's tongue touching its skin
+70,Unknown,snake's tongue not touching its skin
+71,Unknown,lock locked
+72,Unknown,lock unlocked
+73,Unknown,ground wet
+74,Unknown,ground dry
+75,Unknown,flower seen from above
+76,Unknown,flower seen from the side
+77,Unknown,animal with visible caudal fin
+78,Unknown,animal without visible caudal fin
+79,Unknown,snake's head oriented facing upwards
+80,Unknown,snake's head directed forwards
+81,Unknown,a hammerhead shark
+82,Unknown,not a hammerhead shark
+83,Unknown,door on the truck open
+84,Unknown,door on the truck closed
+85,Unknown,dog's ears are erect
+86,Unknown,dog's ears are drooping
+87,Unknown,a hand using the mouse
+88,Unknown,no hand using the mouse
+89,Unknown,people
+90,Unknown,no people
+91,Unknown,words displayed on the vehicle's lightbar
+92,Unknown,no words displayed on the vehicle's lightbar
+93,Unknown,accessory on the wrists
+94,Unknown,no accessory on the wrists
+95,Unknown,dense webs
+96,Unknown,sparse webs
+97,Unknown,light on the keyboard
+98,Unknown,no light on the keyboard
+99,Unknown,elephant with long tusks
+100,Unknown,elephant with short tusks
+101,Unknown,woman about to bump the volleyball
+102,Unknown,woman about to set the volleyball
+103,Unknown,needle pointing up
+104,Unknown,needle pointing down
+105,Unknown,eye level view of an apple
+106,Unknown,top view of an apple
+107,Unknown,feet of the butterfly
+108,Unknown,no visible feet of the butterfly
+109,Unknown,bird's wings flapping upward
+110,Unknown,bird's wings flapping downward
+111,Unknown,elephant's trunk pointing inward
+112,Unknown,elephant's trunk pointing outward
+113,Unknown,window
+114,Unknown,no window
+115,Unknown,snail away from the camera
+116,Unknown,snail facing the camera
+117,Unknown,one eye of the cat
+118,Unknown,both eyes of the cat
+119,Unknown,one eye of the eagle
+120,Unknown,both eyes of eagle
+121,Unknown,corn with white and yellow kernels
+122,Unknown,corn with only yellow kernels
+123,Unknown,a duck facing left
+124,Unknown,a duck facing right
+125,Unknown,a door
+126,Unknown,no door
+127,Unknown,center of the flower protruding
+128,Unknown,center of the flower indenting
+129,Unknown,words shown directly to the camera
+130,Unknown,words shown at an angle to the camera
+131,Unknown,the yellow animal's head lying on the floor
+132,Unknown,the yellow animal's head lying on the fcarpet
+133,Unknown,"center says ""OK/SELECT"""
+134,Unknown,"center says ""OK"""
+135,Unknown,a cup of drink
+136,Unknown,two cups of drink
+137,Unknown,snake head coiled
+138,Unknown,snake head extended
+139,Unknown,side windows of the vehicles
+140,Unknown,no side windows of the vehicles
+141,Unknown,elephant's trunk raised
+142,Unknown,elephant's trunk lowered
+143,Unknown,ladybug positioned upright
+144,Unknown,ladybug positioned upside down
+145,Unknown,wine glass from top-down view
+146,Unknown,wine glass from bottom-up view
+147,Unknown,snake's head visible
+148,Unknown,snake's head not visible
+149,Unknown,piano's back panel on the left
+150,Unknown,piano's back panel on the right
+151,Unknown,back view of a person
+152,Unknown,side view of a person
+153,Unknown,one red apple
+154,Unknown,more than one red apple
+155,Unknown,vase beside the bedside table
+156,Unknown,vase on the windowsill
+157,Unknown,motorcycle with silver front frame
+158,Unknown,motorcycle with black front frame
+159,Unknown,one arm of the people operating the machine
+160,Unknown,both arm of the people operating the machine
+161,Unknown,"minute hand closer to ""12"""
+162,Unknown,"minute hand closer to ""1"""
+163,Unknown,Christmas tree in front of a window
+164,Unknown,Christmas tree between two windows
+165,Unknown,berries placed on a dish
+166,Unknown,berries placed in bowls of yogurts
+167,Unknown,some fruits cut in half
+168,Unknown,uncut fruits
+169,Unknown,a knee
+170,Unknown,no knee
+171,Unknown,snowman with a mouth
+172,Unknown,snowman with no mouth
+173,Unknown,easter egg with flat pattern
+174,Unknown,easter egg with raised pattern
+175,Unknown,nail polish with dark color
+176,Unknown,nail polish with light color
+177,Unknown,person facing the ocean
+178,Unknown,person turned sideways to the ocean
+179,Unknown,1 wheel
+180,Unknown,2 wheels
+181,Unknown,car with blue stripe
+182,Unknown,car with white stripe
+183,Unknown,teddy bears holding hands
+184,Unknown,teddy bears leaning against each other
+185,Unknown,person already standing on the weighing scale
+186,Unknown,person not already standing on the weighing scale
+187,Unknown,person stretching out one arm
+188,Unknown,person stretching out both arms
+189,Unknown,person on the grass
+190,Unknown,person on the gravel path
+191,Unknown,a flower next to the Easter egg
+192,Unknown,no flower next to the Easter egg
+193,Unknown,vegetables placed on the floor
+194,Unknown,vegetables placed on the soil
+195,Unknown,juice and carrots on the same level of a surface
+196,Unknown,juice and carrots on different levels of the surface
+197,Unknown,person weighing themselves barefoot
+198,Unknown,person weighing themselves in sandals
+199,Unknown,quail eggs in the corner
+200,Unknown,chicken eggs in the corner
+201,Unknown,"A poster says ""Happy Easter"""
+202,Unknown,"A poster says ""Happy Easter!"""
+203,Unknown,oranges hanging on the tree
+204,Unknown,oranges gathered in a pile
+205,Unknown,glass coffee cup
+206,Unknown,ceramic coffee cup
+207,Unknown,red bell pepper
+208,Unknown,yellow bell pepper
+209,Unknown,an orange with leaves next to the cup
+210,Unknown,no orange with leaves next to the cup
+211,Unknown,heart-shaped object resting on the palm
+212,Unknown,heart-shaped object being held by the fingers
+213,Unknown,snowman with arms made of branches
+214,Unknown,snowman without arms made of branches
+215,Unknown,black stripes on the roof of the car
+216,Unknown,no black stripes on the roof of the car
+217,Unknown,knife lay flat
+218,Unknown,knife stand up
+219,Unknown,person running towards the camera
+220,Unknown,person running away from the camera
+221,Unknown,one of the man's hands blocked by the woman
+222,Unknown,none of the man's hands blocked by the woman
+223,Unknown,pomegranate
+224,Unknown,no pomegranate
+225,Unknown,the cups and bottles of the same height
+226,Unknown,the cups and bottles of different heights
+227,Unknown,person holding something
+228,Unknown,person holding nothing
+229,Unknown,bottles facing the same direction
+230,Unknown,bottles facing different directions
+231,Unknown,all easter eggs placed in a container
+232,Unknown,some easter eggs outside a container
+233,Unknown,dark blue sky
+234,Unknown,light blue sky
+235,Unknown,front view of a family
+236,Unknown,back view of a family
+237,Unknown,ground completely covered by red fallen leaves
+238,Unknown,ground not completely covered by red fallen leaves
+239,Unknown,shoes placed side by side
+240,Unknown,shoes placed one on top of another
+241,Unknown,coffee from top
+242,Unknown,coffee from side
+243,Unknown,a rabbit facing left
+244,Unknown,a rabbit facing right
+245,Unknown,elderly person standing
+246,Unknown,elderly person sitting
+247,Unknown,fruits or vegetables in the heart-shaped part
+248,Unknown,fruits or vegetables around the heart-shaped part
+249,Unknown,strawberries on the very top of the cake 
+250,Unknown,cream on the very top of the cake
+251,Unknown,beverage in a mug
+252,Unknown,beverage in a glass
+253,Unknown,Santa Claus design
+254,Unknown,snowman design
+255,Unknown,cookies stacked on top of other cookies
+256,Unknown,no cookies stacked on top of other cookies
+257,Unknown,a lemon inside the drink in the cup
+258,Unknown,all the lemons outside the drink
+259,Unknown,elderly people moving to the left
+260,Unknown,elderly people moving to the right
+261,Unknown,people sitting on black chairs
+262,Unknown,people sitting on white chairs
+263,Unknown,a slice of cake
+264,Unknown,a whole cake
+265,Unknown,shoe tied
+266,Unknown,shoe untied
+267,Unknown,child facing the camera
+268,Unknown,child in profile to the camera
+269,Unknown,empty wall behind the bed
+270,Unknown,a painting hanging on the wall behind the bed
+271,Unknown,male wearing a shirt
+272,Unknown,male wearing a T-shirt
+273,Unknown,pumpkin lights pattern
+274,Unknown,bats pattern
+275,Unknown,treehouse built on one tree
+276,Unknown,treehouse built on more than one tree
+277,Unknown,"""SUGAR"""
+278,Unknown,"""UGA"""
+279,Unknown,elderly person standing
+280,Unknown,elderly person sitting
+281,Unknown,drinks on the table
+282,Unknown,no drinks on the table
+283,Unknown,a salmon fillet
+284,Unknown,a salmon steak
+285,Unknown,a yellow towel
+286,Unknown,a white towel
+287,Unknown,a cup placed on a surface
+288,Unknown,a cup being held by hand
+289,Unknown,different colors of grapes
+290,Unknown,only one color of grape
+291,Unknown,minion smiling with its tongue out
+292,Unknown,minion smiling without its tongue out
+293,Unknown,car facing left
+294,Unknown,car facing right
+295,Unknown,hearts with white edges
+296,Unknown,hearts with dark-color edges
+297,Unknown,patterns on the easter eggs
+298,Unknown,no patterns on the easter eggs
+299,Unknown,light shining through the clouds from the upper right corner
+300,Unknown,most of the background is dark and cloudy

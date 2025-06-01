@@ -2,9 +2,9 @@
 
 This repo includes the code for "Exploring How Generative MLLMs Perceive More Than CLIP with the Same Vision Encoder" (ACL 2025). 
 
-![Overview](figs/fig1.png)
+![Overview](figs/overview.png)
 
-![Ablations](figs/fig2.png)
+![Ablations](figs/ablations.png)
 
 ## Evaluation on What'sUp and MMVP/MMVP-VLM
 

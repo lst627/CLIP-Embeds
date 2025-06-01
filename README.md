@@ -48,7 +48,9 @@ Then we train the model with the `'cls'` option for both stages (Pre-training fo
 
 ## Ablation on Token Usage and Language Model on CLIP
 
-For PACL (with patch tokens for image) and SPARC (with patch tokens for image and multiple text tokens), our code is based on an implementation of [PACL](https://github.com/NMS05/Patch-Aligned-Contrastive-Learning). Check `Patch-Aligned-Contrastive-Learning` for all the relevant code. For replacing the text encoder with a stronger LLM-based text encoder, we first calculate all the text embeddings to accelerate training. The embeddings can be downloaded [here]().
+For PACL (with patch tokens for image) and SPARC (with patch tokens for image and multiple text tokens), our code is based on an implementation of [PACL](https://github.com/NMS05/Patch-Aligned-Contrastive-Learning). Check `Patch-Aligned-Contrastive-Learning` for all the relevant code. For replacing the text encoder with a stronger LLM-based text encoder, we first calculate all the text embeddings to accelerate training. 
+
+The LLM embeddings and all checkpoints will be uploaded soon.
 
 ## Ablation on Alignment Architecture and Prompt
 

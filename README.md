@@ -4,7 +4,7 @@ This repo includes the code for "Exploring How Generative MLLMs Perceive More Th
 
 <p align="center">
     <img src="figs/overview.png" alt="Overview" width="350"/>
-    <img src="figs/ablations.png" alt="Ablations" width="350"/>
+    <img src="figs/ablations.png" alt="Ablations" width="450"/>
 </p>
 
 ## Evaluation on What'sUp and MMVP/MMVP-VLM

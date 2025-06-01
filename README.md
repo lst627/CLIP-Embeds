@@ -2,6 +2,10 @@
 
 This repo includes the code for "Exploring How Generative MLLMs Perceive More Than CLIP with the Same Vision Encoder" (ACL 2025). 
 
+![Overview](figs/fig1.png)
+
+![Ablations](figs/fig2.png)
+
 ## Evaluation on What'sUp and MMVP/MMVP-VLM
 
 First, download the [What'sUp dataset](https://github.com/amitakamath/whatsup_vlms) and [MMVP/MMVP-VLM](https://github.com/tsb0601/MMVP) accordingly. Our evaluation code is also based on their code.
@@ -46,9 +50,21 @@ Then we train the model with the `'cls'` option for both stages (Pre-training fo
 
 For PACL (with patch tokens for image) and SPARC (with patch tokens for image and multiple text tokens), our code is based on an implementation of [PACL](https://github.com/NMS05/Patch-Aligned-Contrastive-Learning). Check `Patch-Aligned-Contrastive-Learning` for all the relevant code. For replacing the text encoder with a stronger LLM-based text encoder, we first calculate all the text embeddings to accelerate training. The embeddings can be downloaded [here]().
 
-
 ## Ablation on Alignment Architecture and Prompt
 
 Our code is based on a previous commit of [VLM2Vec] (https://github.com/TIGER-AI-Lab/VLM2Vec). Please refer to their repository for setting up the environment.
 
 Our LLaVA-1.5-7B-VLM2Vec-LoRA checkpoint can be downloaded [here](https://huggingface.co/lst627/LLaVA-1.5-7B-VLM2Vec-LoRA) and can be evaluated using `VLM2Vec/eval.sh`. If you would like to reproduce the training process, please refer to `VLM2Vec/scripts/llava_1.5/run_train.sh`. 
+
+## Citation
+
+If you find our code, data, or the paper useful, please cite the paper:
+
+```
+@article{li2024erroneous,
+  title={On Erroneous Agreements of CLIP Image Embeddings},
+  author={Li, Siting and Koh, Pang Wei and Du, Simon Shaolei},
+  journal={arXiv preprint arXiv:2411.05195},
+  year={2024}
+}
+```

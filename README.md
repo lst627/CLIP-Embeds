@@ -44,7 +44,7 @@ def feature_select(self, image_forward_outs):
     return image_features
 ```
 
-Then we train the model with the `'cls'` option for both stages (Pre-training for Feature Alignment + Fine-tuning End-to-End). The checkpoints can be downloaded at https://huggingface.co/lst627/llava-v1.5-7b-lora-merged and https://huggingface.co/lst627/llava-v1.5-7b-lora-cls-merged.
+Then we train the model with the `'cls'` option for both stages (Pre-training for Feature Alignment + Fine-tuning End-to-End). The checkpoints can be downloaded at https://huggingface.co/lst627/llava-v1.5-7b-lora-merged and https://huggingface.co/lst627/llava-v1.5-7b-lora-cls-merged. Note that LLaVA-1.5 uses the penultimate layer in CLIP vision encoder, not the last layer.
 
 ## Ablation on Token Usage and Language Model on CLIP
 

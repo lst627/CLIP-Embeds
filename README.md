@@ -1,6 +1,6 @@
 # Exploring How Generative MLLMs Perceive More Than CLIP with the Same Vision Encoder (ACL 2025)
 
-This repo includes the code for "Exploring How Generative MLLMs Perceive More Than CLIP with the Same Vision Encoder" (ACL 2025). 
+This repo includes the code for "[Exploring How Generative MLLMs Perceive More Than CLIP with the Same Vision Encoder](https://arxiv.org/pdf/2411.05195)" (ACL 2025). 
 <p align="center">
     <img src="figs/overview.png" alt="Overview" height="600"/>
     <img src="figs/ablations.png" alt="Ablations" height="600"/>

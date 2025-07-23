@@ -63,8 +63,8 @@ Our LLaVA-1.5-7B-VLM2Vec-LoRA checkpoint can be downloaded [here](https://huggin
 If you find our code, data, or the paper useful, please cite the paper:
 
 ```
-@article{li2024erroneous,
-  title={On Erroneous Agreements of CLIP Image Embeddings},
+@article{li2024exploring,
+  title={Exploring how generative mllms perceive more than clip with the same vision encoder},
   author={Li, Siting and Koh, Pang Wei and Du, Simon Shaolei},
   journal={arXiv preprint arXiv:2411.05195},
   year={2024}

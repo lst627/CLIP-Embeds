@@ -63,10 +63,11 @@ Our LLaVA-1.5-7B-VLM2Vec-LoRA checkpoint can be downloaded [here](https://huggin
 If you find our code, data, or the paper useful, please cite the paper:
 
 ```
-@article{li2024exploring,
+@inproceedings{li2025exploring,
   title={Exploring how generative mllms perceive more than clip with the same vision encoder},
   author={Li, Siting and Koh, Pang Wei and Du, Simon Shaolei},
-  journal={arXiv preprint arXiv:2411.05195},
-  year={2024}
+  booktitle={Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)},
+  pages={10101--10119},
+  year={2025}
 }
 ```
